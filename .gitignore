@@ -37,3 +37,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Local QA credentials ###
+.env.qa4
+qa4-env.ps1

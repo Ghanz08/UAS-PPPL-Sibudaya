@@ -23,7 +23,35 @@ public final class ConfigLoader {
     }
 
     public static String get(String key) {
+        String systemValue = System.getProperty(key);
+        if (systemValue != null && !systemValue.isBlank()) {
+            return systemValue;
+        }
+
+        String envValue = System.getenv(key.toUpperCase().replace('.', '_'));
+        if (envValue != null && !envValue.isBlank()) {
+            return envValue;
+        }
+
         return PROPERTIES.getProperty(key);
+    }
+
+    public static String getOptional(String key) {
+        String value = get(key);
+        if (value == null || value.isBlank() || value.startsWith("<")) {
+            return null;
+        }
+
+        return value.trim();
+    }
+
+    public static boolean getBoolean(String key, boolean defaultValue) {
+        String value = getOptional(key);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        return Boolean.parseBoolean(value);
     }
 
     public static String getBaseUrl() {
