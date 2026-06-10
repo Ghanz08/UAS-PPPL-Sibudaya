@@ -85,3 +85,27 @@ mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@qa4"
 ## Catatan
 
 Default browser adalah Chrome normal (non-headless).
+
+## Sibudaya E2E Cucumber
+
+Target URL: `https://www.sibudaya.cloud/sibudaya`
+
+Read-only flow:
+
+```bash
+mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @readonly"
+```
+
+Submit flow, creates real production data:
+
+```bash
+mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @submit"
+```
+
+Both flows:
+
+```bash
+mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @e2e"
+```
+
+Warning: `@submit` creates a real facilitation submission in production. Use `@readonly` when production data must not change.
