@@ -7,6 +7,7 @@ import sibudaya.e2e.pages.AdminDashboardPage;
 import sibudaya.e2e.pages.AdminDataPage;
 import sibudaya.e2e.pages.AjukanFasilitasiPage;
 import sibudaya.e2e.pages.AuthPage;
+import sibudaya.e2e.pages.PengajuanFormPage;
 import sibudaya.e2e.pages.StatusPengajuanPage;
 import sibudaya.e2e.pages.UserDashboardPage;
 import sibudaya.e2e.support.E2eContext;
@@ -81,5 +82,30 @@ public class SibudayaE2eSteps {
     @Then("the read-only administration page is shown")
     public void theReadOnlyAdministrationPageIsShown() {
         new AdminDataPage(context.getDriver()).assertShown();
+    }
+
+    @When("the user starts the first available facilitation submission")
+    public void theUserStartsTheFirstAvailableFacilitationSubmission() {
+        new AjukanFasilitasiPage(context.getDriver()).startFirstAvailableSubmission();
+    }
+
+    @When("the user completes and submits the facilitation form")
+    public void theUserCompletesAndSubmitsTheFacilitationForm() {
+        context.setSubmissionMarker(new PengajuanFormPage(context.getDriver()).completeAndSubmit());
+    }
+
+    @Then("the submitted request status page is shown")
+    public void theSubmittedRequestStatusPageIsShown() {
+        new StatusPengajuanPage(context.getDriver()).assertSubmittedStatusShown(context.getSubmissionMarker());
+    }
+
+    @When("the superadmin searches for the submitted request")
+    public void theSuperadminSearchesForTheSubmittedRequest() {
+        new AdminDashboardPage(context.getDriver()).openSubmittedRequest(context.getSubmissionMarker());
+    }
+
+    @Then("the submitted request is visible to the superadmin")
+    public void theSubmittedRequestIsVisibleToTheSuperadmin() {
+        new StatusPengajuanPage(context.getDriver()).assertVisibleAnyText(context.getSubmissionMarker(), "Pengajuan", "Status", "Fasilitasi");
     }
 }
