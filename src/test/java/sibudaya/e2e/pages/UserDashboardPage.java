@@ -32,10 +32,11 @@ public class UserDashboardPage extends BaseE2ePage {
     }
 
     public void openProfile() {
-        openPath("/dashboard/profil");
+        openPath("/dashboard/my-profile");
     }
 
     public void assertProfileOrDashboardFallbackShown() {
         assertVisibleAnyText("Profil", "Data Lembaga", "Dashboard", "Pantau perkembangan");
     }
 }
+
