@@ -2,15 +2,16 @@ package shared.utils;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import shared.core.ConfigLoader;
 
 import java.time.Duration;
 
 public final class WaitHelper {
+    private static final int DEFAULT_TIMEOUT_SECONDS = 30;
+
     private WaitHelper() {
     }
 
-    public static WebDriverWait defaultWait(WebDriver webDriver) {
-        return new WebDriverWait(webDriver, Duration.ofSeconds(ConfigLoader.getTimeoutSeconds()));
+    public static WebDriverWait defaultWait(WebDriver driver) {
+        return new WebDriverWait(driver, Duration.ofSeconds(DEFAULT_TIMEOUT_SECONDS));
     }
 }

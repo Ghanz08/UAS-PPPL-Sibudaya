@@ -14,6 +14,8 @@ public final class DriverFactory {
 
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("--start-maximized");
+        chromeOptions.addArguments("--incognito");
+        chromeOptions.addArguments("--disable-cache");
 
         return new ChromeDriver(chromeOptions);
     }
