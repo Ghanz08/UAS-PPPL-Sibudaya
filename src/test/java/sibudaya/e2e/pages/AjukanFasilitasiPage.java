@@ -18,6 +18,7 @@ public class AjukanFasilitasiPage extends BaseE2ePage {
     public void startFirstAvailableSubmission() {
         for (WebElement link : driver.findElements(By.cssSelector("a[href*='/dashboard/ajukan-fasilitasi/form']"))) {
             if (link.isDisplayed() && link.isEnabled() && !link.getText().toLowerCase().contains("tidak tersedia")) {
+                WaitHelper.pauseForVisual();
                 link.click();
                 waitForUrlContains("/dashboard/ajukan-fasilitasi/form");
                 return;

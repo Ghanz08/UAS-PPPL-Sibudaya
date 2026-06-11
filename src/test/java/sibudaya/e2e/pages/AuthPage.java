@@ -50,6 +50,7 @@ public class AuthPage extends BaseE2ePage {
         WebElement passwordInput = driver.findElement(By.cssSelector("input[type='password']"));
         passwordInput.clear();
         passwordInput.sendKeys(password);
+        WaitHelper.pauseForVisual();
         driver.findElement(By.xpath("//button[contains(normalize-space(.), 'Masuk')]")).click();
 
         waitForPage().until(webDriver -> Boolean.TRUE.equals(((JavascriptExecutor) webDriver).executeScript(

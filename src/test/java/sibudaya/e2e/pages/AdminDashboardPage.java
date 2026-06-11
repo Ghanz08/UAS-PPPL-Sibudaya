@@ -27,6 +27,7 @@ public class AdminDashboardPage extends BaseE2ePage {
         }
         for (WebElement link : driver.findElements(By.cssSelector("a[href*='/dashboard/admin/status/']"))) {
             if (link.isDisplayed()) {
+                WaitHelper.pauseForVisual();
                 link.click();
                 waitForUrlContains("/dashboard/admin/status/");
                 return;

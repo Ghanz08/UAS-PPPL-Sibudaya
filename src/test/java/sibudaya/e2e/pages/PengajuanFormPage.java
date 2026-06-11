@@ -70,6 +70,7 @@ public class PengajuanFormPage extends BaseE2ePage {
     private void clickSubmit() {
         By submitButton = By.xpath("//button[contains(normalize-space(.), 'Ajukan')] | //button[contains(normalize-space(.), 'Kirim')] | //button[contains(normalize-space(.), 'Submit')]");
         if (!driver.findElements(submitButton).isEmpty()) {
+            WaitHelper.pauseForVisual();
             driver.findElement(submitButton).click();
             return;
         }

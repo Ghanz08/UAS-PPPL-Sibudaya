@@ -24,6 +24,7 @@ public class UserDashboardPage extends BaseE2ePage {
         waitForUrlContains("/dashboard");
         for (WebElement link : driver.findElements(By.cssSelector("a[href*='/dashboard/status/']"))) {
             if (link.isDisplayed()) {
+                WaitHelper.pauseForVisual();
                 link.click();
                 waitForUrlContains("/dashboard/status/");
                 return;

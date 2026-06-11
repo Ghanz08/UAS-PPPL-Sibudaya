@@ -66,6 +66,7 @@ public abstract class BaseE2ePage {
     }
 
     protected void clickTextLinkOrButton(String text) {
+        WaitHelper.pauseForVisual();
         waitForPage().until(ExpectedConditions.elementToBeClickable(By.xpath(
                 "//a[contains(normalize-space(.), " + xpathLiteral(text) + ")] | //button[contains(normalize-space(.), " + xpathLiteral(text) + ")]"
         ))).click();
@@ -77,6 +78,7 @@ public abstract class BaseE2ePage {
             return;
         }
         WebElement input = elements.get(0);
+        WaitHelper.pauseForVisual();
         input.click();
         input.sendKeys(Keys.chord(Keys.CONTROL, "a"));
         input.sendKeys(Keys.BACK_SPACE);
@@ -89,6 +91,7 @@ public abstract class BaseE2ePage {
             return;
         }
         WebElement input = elements.get(0);
+        WaitHelper.pauseForVisual();
         input.click();
         input.sendKeys(Keys.chord(Keys.CONTROL, "a"));
         input.sendKeys(Keys.BACK_SPACE);
