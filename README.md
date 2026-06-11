@@ -38,6 +38,17 @@ mvn test -Dgroups=qa3
 mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@qa4"
 ```
 
+Per tag case QA-4:
+
+```bash
+mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M4F3-P01"
+mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M4F3-P02"
+mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M4F3-N01"
+mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M4F3-N02"
+mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M5F1-P01"
+mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M5F1-E01" -Dqa4.empty.dashboard.enabled=true
+```
+
 QA-4 memakai BDD dengan Gherkin di `src/test/resources/features/qa4_review_config.feature`
 dan Page Object Model di `src/test/java/qa4/reviewconfig/pages`.
 
