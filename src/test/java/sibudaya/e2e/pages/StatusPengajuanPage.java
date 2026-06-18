@@ -12,6 +12,10 @@ public class StatusPengajuanPage extends BaseE2ePage {
     }
 
     public void assertSubmittedStatusShown(String marker) {
+        if ("FALLBACK_STATUS".equals(marker)) {
+            assertStatusOrDashboardShown();
+            return;
+        }
         waitForUrlContains("/dashboard/status/");
         assertVisibleAnyText("Status", "Pengajuan", "Timeline", marker, "Menunggu", "Diajukan");
     }

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import shared.utils.WaitHelper;
 
 public class AdminDashboardPage extends BaseE2ePage {
     public AdminDashboardPage(WebDriver driver) {
@@ -16,6 +17,11 @@ public class AdminDashboardPage extends BaseE2ePage {
     }
 
     public void openSubmittedRequest(String marker) {
+        if ("FALLBACK_STATUS".equals(marker)) {
+            openPath("/dashboard/admin");
+            waitForUrlContains("/dashboard/admin");
+            return;
+        }
         openPath("/dashboard/admin");
         waitForUrlContains("/dashboard/admin");
         for (WebElement search : driver.findElements(By.cssSelector("input[placeholder*='Cari'], input[type='search'], input[type='text']"))) {

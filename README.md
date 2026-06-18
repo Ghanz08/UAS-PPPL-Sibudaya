@@ -1,122 +1,246 @@
-# PAD Sibudaya QA Automation
+# UAS PPPL Sibudaya QA Automation
 
-Project ini menggunakan:
+Automation test untuk aplikasi Sibudaya berbasis Java, Maven, Selenium WebDriver, JUnit Platform, dan Cucumber/Gherkin.
+
+Target default:
+
+```text
+https://www.sibudaya.cloud/sibudaya
+```
+
+## SUT
+
+System Under Test adalah aplikasi web Sibudaya, layanan fasilitasi lembaga budaya untuk pengajuan Fasilitasi Pentas dan Fasilitasi Hibah. Area yang diuji mencakup login user lembaga, pengajuan fasilitasi, profil lembaga, pengaturan fasilitasi admin, dan manajemen pengguna admin.
+
+## Test Suite
+
+Test suite memakai Selenium WebDriver dengan Page Object Model, Cucumber/Gherkin, dan JUnit Platform. Login admin dan user dipusatkan di helper `AuthHelper` sehingga setiap flow bisa memakai kredensial yang sama tanpa duplikasi step.
+
+Flow utama:
+
+- Admin CRUD Pengaturan Fasilitasi Pentas: `@admin-pentas-crud`
+- Admin CRUD Pengaturan Fasilitasi Hibah: `@admin-hibah-crud`
+- Admin CRUD Manajemen Pengguna: `@admin-user-crud`
+- User Pengajuan Pentas: `@user-pentas-submit`
+- User Pengajuan Hibah: `@user-hibah-submit`
+- User Update Data Kepala Lembaga: `@user-kepala-update`
+
+Dokumen test case dan bug report tersedia di:
+
+```text
+docs/test-cases.md
+docs/bug-report.md
+```
+
+
+## Tech Stack
+
+- Java 21
 - Maven
-- Selenium WebDriver
-- JUnit 5
-- Cucumber / Gherkin
+- Selenium WebDriver 4
 - WebDriverManager
+- Cucumber 7
+- JUnit Platform Suite
+- Chrome Browser
 
-## URL Frontend
+## Struktur Project
 
-`https://www.sibudaya.cloud/sibudaya`
+```text
+src/test/java
++-- shared
+|   +-- core        # konfigurasi, driver, base test
+|   +-- utils       # helper wait
++-- sibudaya/e2e
+    +-- pages       # Page Object Model
+    +-- steps       # Step definitions Cucumber
+    +-- support     # hooks, context, data test
 
-## Struktur Automation
+src/test/resources
++-- features
+|   +-- admin_manajemen_pengguna_crud.feature
+|   +-- admin_pengaturan_fasilitasi_hibah_crud.feature
+|   +-- admin_pengaturan_fasilitasi_pentas_crud.feature
+|   +-- sibudaya_e2e_readonly.feature
+|   +-- sibudaya_e2e_submission.feature
+|   +-- user_pengajuan_hibah.feature
+|   +-- user_pengajuan_pentas.feature
+|   +-- user_update_kepala_lembaga.feature
++-- shared/config.properties
++-- sibudaya/e2e/proposal-e2e-sample.pdf
 
-- `src/test/java/qa1/authakses`
-- `src/test/java/qa2/adminkelola`
-- `src/test/java/qa3/pengajuan`
-- `src/test/java/qa4/reviewconfig`
-- `src/test/java/shared`
+docs
++-- test-cases.md
++-- bug-report.md
+```
 
-Setiap QA bekerja di package masing-masing agar tidak saling mengganggu.
+## Prasyarat
+
+Pastikan tersedia di mesin lokal:
+
+```bash
+java -version
+mvn -version
+```
+
+Project dikompilasi dengan Java 21. Test berjalan memakai Chrome normal dengan mode incognito, cache disabled, dan window maximized. ChromeDriver dikelola otomatis oleh WebDriverManager.
+
+## Konfigurasi
+
+Konfigurasi default ada di:
+
+```text
+src/test/resources/shared/config.properties
+```
+
+Nilai konfigurasi bisa dioverride dengan system property Maven:
+
+```bash
+mvn test -Dbase.url="https://www.sibudaya.cloud/sibudaya"
+```
+
+Atau environment variable dengan huruf besar dan titik diganti underscore:
+
+```powershell
+$env:SIBUDAYA_E2E_USER_IDENTIFIER="user-login"
+$env:SIBUDAYA_E2E_USER_PASSWORD="password-user"
+$env:SIBUDAYA_E2E_SUPERADMIN_IDENTIFIER="superadmin-login"
+$env:SIBUDAYA_E2E_SUPERADMIN_PASSWORD="password-superadmin"
+```
+
+Key yang umum dipakai:
+
+```text
+base.url
+default.timeout.seconds
+sibudaya.e2e.user.identifier
+sibudaya.e2e.user.password
+sibudaya.e2e.superadmin.identifier
+sibudaya.e2e.superadmin.password
+```
+
+Default akun assignment:
+
+```text
+Admin/superadmin: superadmin@fasilitasi.go.id / SuperAdmin@2026!
+User lembaga: NIK-LBG-2026-0001 / 12345678
+```
 
 ## Menjalankan Test
 
-Semua test (sequential):
+Semua test:
 
 ```bash
 mvn test
 ```
 
-Per QA berdasarkan tag:
-
-```bash
-mvn test -Dgroups=qa1
-mvn test -Dgroups=qa2
-mvn test -Dgroups=qa3
-mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@qa4"
-```
-
-Per tag case QA-4:
-
-```bash
-mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M4F3-P01"
-mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M4F3-P02"
-mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M4F3-N01"
-mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M4F3-N02"
-mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M5F1-P01"
-mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M5F1-E01" -Dqa4.empty.dashboard.enabled=true
-```
-
-QA-4 memakai BDD dengan Gherkin di `src/test/resources/features/qa4_review_config.feature`
-dan Page Object Model di `src/test/java/qa4/reviewconfig/pages`.
-
-## Data Automation QA-4
-
-QA-4 membutuhkan akun dan ID pengajuan live. Jangan simpan credential asli di repo; isi lewat system property saat menjalankan test:
-
-```bash
-mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@qa4" \
-  -Dqa4.admin.identifier="admin@example.com" \
-  -Dqa4.admin.password="password-admin" \
-  -Dqa4.lembaga.identifier="nik-atau-email-lembaga" \
-  -Dqa4.lembaga.password="password-lembaga" \
-  -Dqa4.timeline.pengajuan.id="id-pengajuan-riwayat-status" \
-  -Dqa4.revisi.pengajuan.id="id-pengajuan-direvisi" \
-  -Dqa4.selesai.pengajuan.id="id-pengajuan-selesai" \
-  -Dqa4.ditolak.pengajuan.id="id-pengajuan-ditolak"
-```
-
-Case `M5F1-E01` hanya valid untuk database kosong. Aktifkan khusus environment kosong:
-
-```bash
-mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@M5F1-E01" -Dqa4.empty.dashboard.enabled=true
-```
-
-Alternatif env lokal:
-
-1. Copy `.env.qa4.example` menjadi `.env.qa4`.
-2. Isi akun admin, akun lembaga, dan ID pengajuan live.
-3. Load env di PowerShell:
-
-```powershell
-Get-Content .env.qa4 | Where-Object { $_ -and -not $_.StartsWith('#') } | ForEach-Object {
-  $name, $value = $_ -split '=', 2
-  Set-Item -Path "Env:$name" -Value $value
-}
-```
-
-4. Jalankan test:
-
-```bash
-mvn test -Dtest=qa4.reviewconfig.Qa4CucumberTest -Dcucumber.filter.tags="@qa4"
-```
-
-## Catatan
-
-Default browser adalah Chrome normal (non-headless).
-
-## Sibudaya E2E Cucumber
-
-Target URL: `https://www.sibudaya.cloud/sibudaya`
-
-Read-only flow:
-
-```bash
-mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @readonly"
-```
-
-Submit flow, creates real production data:
-
-```bash
-mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @submit"
-```
-
-Both flows:
+Semua flow Sibudaya E2E:
 
 ```bash
 mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @e2e"
 ```
 
-Warning: `@submit` creates a real facilitation submission in production. Use `@readonly` when production data must not change.
+Flow read-only:
+
+```bash
+mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @readonly"
+```
+
+Flow submit data production:
+
+```bash
+mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @submit"
+```
+
+Flow admin pengaturan fasilitasi pentas:
+
+```bash
+mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@admin-pentas-crud"
+```
+
+Flow admin pengaturan fasilitasi hibah:
+
+```bash
+mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@admin-hibah-crud"
+```
+
+Flow admin manajemen pengguna:
+
+```bash
+mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@admin-user-crud"
+```
+
+Flow user pengajuan pentas:
+
+```bash
+mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@user-pentas-submit"
+```
+
+Flow user pengajuan hibah:
+
+```bash
+mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@user-hibah-submit"
+```
+
+Flow user update Data Kepala Lembaga:
+
+```bash
+mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@user-kepala-update"
+```
+
+Peringatan: tag `@submit` membuat pengajuan fasilitasi nyata di environment target. Gunakan `@readonly` jika tidak boleh mengubah data production.
+
+## Skenario Yang Tersedia
+
+### Read-only navigation
+
+File:
+
+```text
+src/test/resources/features/sibudaya_e2e_readonly.feature
+```
+
+Alur utama:
+
+1. User biasa login.
+2. Dashboard user terbuka.
+3. Halaman pilihan fasilitasi terbuka tanpa submit data.
+4. Halaman status pengajuan dibuka jika ada data.
+5. Halaman profil user terbuka.
+6. Superadmin login.
+7. Dashboard superadmin terbuka.
+8. Halaman administrasi read-only terbuka.
+
+### Real submission end-to-end
+
+File:
+
+```text
+src/test/resources/features/sibudaya_e2e_submission.feature
+```
+
+Alur utama:
+
+1. User biasa login.
+2. User membuka halaman pilihan fasilitasi.
+3. User memilih fasilitasi pertama yang tersedia.
+4. User mengisi dan mengirim form pengajuan.
+5. Status pengajuan tampil.
+6. Superadmin login.
+7. Superadmin mencari pengajuan yang baru dibuat.
+8. Pengajuan terlihat di sisi superadmin.
+
+## Data Test
+
+Flow submit memakai fixture PDF:
+
+```text
+src/test/resources/sibudaya/e2e/proposal-e2e-sample.pdf
+```
+
+Marker data otomatis memakai format:
+
+```text
+AUTO-E2E-yyyyMMddHHmmss
+```
+
+Tanggal kegiatan otomatis diset 30 hari dari tanggal eksekusi test.

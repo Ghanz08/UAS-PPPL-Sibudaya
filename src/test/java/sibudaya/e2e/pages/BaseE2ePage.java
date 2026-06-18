@@ -3,6 +3,7 @@ package sibudaya.e2e.pages;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.openqa.selenium.By;
+import org.openqa.selenium.ElementClickInterceptedException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
@@ -72,12 +73,101 @@ public abstract class BaseE2ePage {
         ))).click();
     }
 
-    protected void typeByNameIfPresent(String name, String value) {
-        List<WebElement> elements = driver.findElements(By.name(name));
-        if (elements.isEmpty() || !elements.get(0).isEnabled()) {
+    protected void clickVisibleTextLinkOrButton(String text) {
+        List<WebElement> elements = driver.findElements(By.xpath(
+                "//a[contains(normalize-space(.), " + xpathLiteral(text) + ")] | //button[contains(normalize-space(.), " + xpathLiteral(text) + ")]"
+        ));
+        for (int i = elements.size() - 1; i >= 0; i--) {
+            WebElement element = elements.get(i);
+            if (element.isDisplayed() && element.isEnabled()) {
+                WaitHelper.pauseForVisual();
+                clickElement(element);
+                return;
+            }
+        }
+        clickTextLinkOrButton(text);
+    }
+
+    protected void clickVisibleTextInScope(String scopeText, String actionText) {
+        String scope = xpathLiteral(scopeText);
+        String action = xpathLiteral(actionText);
+        By locator = By.xpath("//*[contains(normalize-space(.), " + scope + ")]//button[contains(normalize-space(.), " + action + ") or contains(@aria-label, " + action + ")]"
+                + " | //*[contains(normalize-space(.), " + scope + ")]//a[contains(normalize-space(.), " + action + ") or contains(@aria-label, " + action + ")]");
+        for (WebElement element : driver.findElements(locator)) {
+            if (element.isDisplayed() && element.isEnabled()) {
+                WaitHelper.pauseForVisual();
+                clickElement(element);
+                return;
+            }
+        }
+        throw new AssertionError("Could not click action " + actionText + " inside scope " + scopeText + System.lineSeparator() + visibleText());
+    }
+
+    protected void typeByLabel(String label, String value) {
+        WebElement element = findControlByLabel(label);
+        WaitHelper.pauseForVisual();
+        element.click();
+        element.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+        element.sendKeys(Keys.BACK_SPACE);
+        element.sendKeys(value);
+    }
+
+    protected void selectByLabel(String label, String value) {
+        WebElement element = findControlByLabel(label);
+        if ("select".equalsIgnoreCase(element.getTagName())) {
+            new Select(element).selectByValue(value);
             return;
         }
-        WebElement input = elements.get(0);
+        typeByLabel(label, value);
+    }
+
+    protected void selectFirstOptionByNameIfPresent(String name) {
+        WebElement element = firstVisibleEnabled(By.name(name));
+        if (element == null) {
+            return;
+        }
+        if ("select".equalsIgnoreCase(element.getTagName())) {
+            Select select = new Select(element);
+            for (WebElement option : select.getOptions()) {
+                String value = option.getAttribute("value");
+                if (option.isEnabled() && value != null && !value.isBlank()) {
+                    select.selectByValue(value);
+                    return;
+                }
+            }
+            return;
+        }
+        typeByNameIfPresent(name, "BRI");
+    }
+
+    protected WebElement findControlByLabel(String label) {
+        String literal = xpathLiteral(label);
+        By locator = By.xpath(
+                "//label[.//*[normalize-space(.)=" + literal + "] or contains(normalize-space(.), " + literal + ")]//*[self::input or self::textarea or self::select]"
+                        + " | //label[normalize-space(.)=" + literal + "]/following-sibling::*//*[self::input or self::textarea or self::select]"
+                        + " | //label[normalize-space(.)=" + literal + "]/following-sibling::*[self::input or self::textarea or self::select]"
+                        + " | //*[normalize-space(.)=" + literal + "]/ancestor::div[1]//*[self::input or self::textarea or self::select]"
+        );
+        return waitForPage().until(webDriver -> webDriver.findElements(locator).stream()
+                .filter(WebElement::isDisplayed)
+                .filter(WebElement::isEnabled)
+                .findFirst()
+                .orElse(null));
+    }
+
+    protected void clickElement(WebElement element) {
+        try {
+            element.click();
+        } catch (ElementClickInterceptedException exception) {
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
+        }
+    }
+
+    protected void typeByNameIfPresent(String name, String value) {
+        WebElement input = firstVisibleEnabled(By.name(name));
+        if (input == null) {
+            return;
+        }
         WaitHelper.pauseForVisual();
         input.click();
         input.sendKeys(Keys.chord(Keys.CONTROL, "a"));
@@ -86,11 +176,10 @@ public abstract class BaseE2ePage {
     }
 
     protected void setDateByNameIfPresent(String name, LocalDate date) {
-        List<WebElement> elements = driver.findElements(By.name(name));
-        if (elements.isEmpty() || !elements.get(0).isEnabled()) {
+        WebElement input = firstVisibleEnabled(By.name(name));
+        if (input == null) {
             return;
         }
-        WebElement input = elements.get(0);
         WaitHelper.pauseForVisual();
         input.click();
         input.sendKeys(Keys.chord(Keys.CONTROL, "a"));
@@ -99,11 +188,11 @@ public abstract class BaseE2ePage {
     }
 
     protected void selectFirstAvailableOptionIfPresent(String name) {
-        List<WebElement> elements = driver.findElements(By.name(name));
-        if (elements.isEmpty() || !elements.get(0).isEnabled()) {
+        WebElement element = firstVisibleEnabled(By.name(name));
+        if (element == null || !"select".equalsIgnoreCase(element.getTagName())) {
             return;
         }
-        Select select = new Select(elements.get(0));
+        Select select = new Select(element);
         for (int i = 0; i < select.getOptions().size(); i++) {
             WebElement option = select.getOptions().get(i);
             String value = option.getAttribute("value");
@@ -114,10 +203,30 @@ public abstract class BaseE2ePage {
         }
     }
 
+    private WebElement firstVisibleEnabled(By locator) {
+        return driver.findElements(locator).stream()
+                .filter(WebElement::isDisplayed)
+                .filter(WebElement::isEnabled)
+                .findFirst()
+                .orElse(null);
+    }
+
     protected void uploadPdf(Path path) {
         WebElement input = waitForPage().until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("input[type='file']")));
         ((JavascriptExecutor) driver).executeScript("arguments[0].style.display='block'; arguments[0].classList.remove('hidden');", input);
         input.sendKeys(path.toString());
+    }
+
+    protected void waitForAnySuccessText(String... texts) {
+        waitForPage().until(webDriver -> {
+            String body = webDriver.findElement(By.tagName("body")).getText().toLowerCase();
+            for (String text : texts) {
+                if (body.contains(text.toLowerCase())) {
+                    return true;
+                }
+            }
+            return false;
+        });
     }
 
     protected void abortIfMissing(By locator, String message) {

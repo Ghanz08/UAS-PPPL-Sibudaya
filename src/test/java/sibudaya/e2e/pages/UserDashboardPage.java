@@ -3,6 +3,7 @@ package sibudaya.e2e.pages;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import shared.utils.WaitHelper;
 
 public class UserDashboardPage extends BaseE2ePage {
     public UserDashboardPage(WebDriver driver) {
