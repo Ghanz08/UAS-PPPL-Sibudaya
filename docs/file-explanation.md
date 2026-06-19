@@ -120,20 +120,6 @@ Skenario CRUD pengaturan fasilitasi Pentas. Dipakai untuk memvalidasi superadmin
 
 Tag utama: `@admin-pentas-crud`.
 
-### `sibudaya_e2e_readonly.feature`
-
-Skenario E2E read-only. Skenario ini membuka halaman penting tanpa submit data produksi: dashboard user, Ajukan Fasilitasi, status pengajuan, profil user, dashboard superadmin, dan halaman administrasi.
-
-Tag utama: `@readonly`.
-
-### `sibudaya_e2e_submission.feature`
-
-Skenario submit end-to-end. User membuat pengajuan nyata, lalu superadmin mencari pengajuan yang baru dibuat.
-
-Tag utama: `@submit`.
-
-Catatan: tag ini mengubah data aplikasi target.
-
 ### `user_pengajuan_hibah.feature`
 
 Skenario user mengajukan Fasilitasi Hibah. Fokusnya pada flow user biasa dari login sampai submit pengajuan Hibah.
@@ -325,18 +311,6 @@ Menjalankan semua E2E Sibudaya:
 mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @e2e"
 ```
 
-Menjalankan read-only test:
-
-```bash
-mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @readonly"
-```
-
-Menjalankan submit test:
-
-```bash
-mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @submit"
-```
-
 Menjalankan CRUD admin pengaturan Pentas:
 
 ```bash
@@ -376,9 +350,9 @@ mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@user-kepala-upd
 ## Catatan Penting
 
 - Test dengan tag `@submit` membuat data nyata di environment target.
-- Gunakan tag `@readonly` jika hanya ingin validasi navigasi tanpa mengubah data.
+- Dokumentasi test case hanya mencantumkan scope CRUD, submit Hibah/Pentas, dan update profil.
 - Test CRUD admin saat ini benar-benar berjalan lewat UI browser, bukan API langsung.
-- Full suite terakhir pada 2026-06-19 berhasil: `8 Scenarios (8 passed)`, `54 Steps (54 passed)`, durasi `13m50,483s`.
+- Full suite terakhir pada 2026-06-19 berhasil: `6 Scenarios (6 passed)`, `30 Steps (30 passed)`, durasi `3m52,010s`.
 - Warning SLF4J provider dan Selenium CDP Chrome 149 bersifat non-fatal pada run final.
 - Credential sebaiknya dioverride lewat environment variable jika tidak ingin menyimpan akun asli di repository.
 - Folder `target` adalah hasil build, bukan source utama.

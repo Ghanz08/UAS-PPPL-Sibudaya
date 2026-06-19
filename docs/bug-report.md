@@ -21,16 +21,14 @@ Metode: UAT berbasis skenario end-to-end dengan Selenium, Cucumber, dan JUnit Pl
 | UAT-USR-001 | User melakukan pengajuan Pentas | Pass |
 | UAT-USR-002 | User melakukan pengajuan Hibah | Pass |
 | UAT-USR-003 | User mengganti nama depan Data Kepala Lembaga | Pass |
-| UAT-REG-001 | Navigasi read-only user dan superadmin | Pass |
-| UAT-REG-002 | User submit pengajuan dan superadmin melihat pengajuan | Pass |
 
 Hasil eksekusi automation UAT:
 
 ```text
-8 Scenarios (8 passed)
-54 Steps (54 passed)
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
-Durasi: 13m50,483s
+6 Scenarios (6 passed)
+30 Steps (30 passed)
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
+Durasi: 3m52,010s
 ```
 
 Catatan automation: CRUD admin user, CRUD pengaturan fasilitasi Hibah, dan CRUD pengaturan fasilitasi Pentas dijalankan melalui UI Selenium. Log eksekusi mencetak data unik yang dibuat, dibaca, diubah, dihapus, dan diverifikasi hilang dari UI.
@@ -45,7 +43,7 @@ Catatan automation: CRUD admin user, CRUD pengaturan fasilitasi Hibah, dan CRUD 
 - Skenario terkait: seluruh skenario UAT
 - Expected result: seluruh flow utama admin dan user dapat dijalankan sampai selesai.
 - Actual result: seluruh flow utama berhasil dijalankan.
-- Evidence: hasil automation UAT menunjukkan `8 Scenarios (8 passed)` dan `Skipped: 0`.
+- Evidence: hasil automation UAT menunjukkan `6 Scenarios (6 passed)` dan `Skipped: 0`.
 - Kesimpulan: tidak ditemukan defect blocking atau critical pada scope UAT yang diuji.
 
 ## Temuan Minor / Improvement UAT

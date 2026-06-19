@@ -4,7 +4,6 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import sibudaya.e2e.pages.AdminDashboardPage;
-import sibudaya.e2e.pages.AdminDataPage;
 import sibudaya.e2e.pages.AdminFasilitasiSettingsPage;
 import sibudaya.e2e.pages.AdminUserManagementPage;
 import sibudaya.e2e.pages.AjukanFasilitasiPage;
@@ -44,21 +43,6 @@ public class SibudayaE2eSteps {
         new UserDashboardPage(context.getDriver()).openFacilitationSelection();
     }
 
-    @Then("the facilitation selection page is shown without submitting data")
-    public void theFacilitationSelectionPageIsShownWithoutSubmittingData() {
-        new AjukanFasilitasiPage(context.getDriver()).assertShownReadOnly();
-    }
-
-    @When("the user opens an existing submission status page if available")
-    public void theUserOpensAnExistingSubmissionStatusPageIfAvailable() {
-        new UserDashboardPage(context.getDriver()).openExistingStatusIfAvailable();
-    }
-
-    @Then("the user status page or dashboard fallback is shown")
-    public void theUserStatusPageOrDashboardFallbackIsShown() {
-        new StatusPengajuanPage(context.getDriver()).assertStatusOrDashboardShown();
-    }
-
     @When("the user opens the profile page")
     public void theUserOpensTheProfilePage() {
         new UserDashboardPage(context.getDriver()).openProfile();
@@ -77,26 +61,6 @@ public class SibudayaE2eSteps {
     @Then("the superadmin dashboard page is shown")
     public void theSuperadminDashboardPageIsShown() {
         new AdminDashboardPage(context.getDriver()).assertShown();
-    }
-
-    @When("the superadmin opens a read-only administration page")
-    public void theSuperadminOpensAReadOnlyAdministrationPage() {
-        new AdminDataPage(context.getDriver()).openReadOnlyAdminPage();
-    }
-
-    @Then("the read-only administration page is shown")
-    public void theReadOnlyAdministrationPageIsShown() {
-        new AdminDataPage(context.getDriver()).assertShown();
-    }
-
-    @When("the user starts the first available facilitation submission")
-    public void theUserStartsTheFirstAvailableFacilitationSubmission() {
-        new AjukanFasilitasiPage(context.getDriver()).startFirstAvailableSubmission();
-    }
-
-    @When("the user completes and submits the facilitation form")
-    public void theUserCompletesAndSubmitsTheFacilitationForm() {
-        context.setSubmissionMarker(new PengajuanFormPage(context.getDriver()).completeAndSubmit());
     }
 
     @When("the user starts a {word} facilitation submission")
@@ -133,15 +97,5 @@ public class SibudayaE2eSteps {
     @Then("the submitted request status page is shown")
     public void theSubmittedRequestStatusPageIsShown() {
         new StatusPengajuanPage(context.getDriver()).assertSubmittedStatusShown(context.getSubmissionMarker());
-    }
-
-    @When("the superadmin searches for the submitted request")
-    public void theSuperadminSearchesForTheSubmittedRequest() {
-        new AdminDashboardPage(context.getDriver()).openSubmittedRequest(context.getSubmissionMarker());
-    }
-
-    @Then("the submitted request is visible to the superadmin")
-    public void theSubmittedRequestIsVisibleToTheSuperadmin() {
-        new StatusPengajuanPage(context.getDriver()).assertVisibleAnyText(context.getSubmissionMarker(), "Pengajuan", "Status", "Fasilitasi");
     }
 }

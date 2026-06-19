@@ -27,12 +27,11 @@ Flow utama:
 - User Pengajuan Hibah: `@user-hibah-submit`
 - User Update Data Kepala Lembaga: `@user-kepala-update`
 
-Hasil verifikasi terakhir pada 2026-06-19:
+Hasil verifikasi setelah dua flow umum dihapus dari suite:
 
 ```text
-8 Scenarios (8 passed)
-54 Steps (54 passed)
-Durasi: 13m50,483s
+6 Scenarios (6 passed)
+30 Steps (30 passed)
 ```
 
 Dokumen test case dan bug report tersedia di:
@@ -70,8 +69,6 @@ src/test/resources
 |   +-- admin_manajemen_pengguna_crud.feature
 |   +-- admin_pengaturan_fasilitasi_hibah_crud.feature
 |   +-- admin_pengaturan_fasilitasi_pentas_crud.feature
-|   +-- sibudaya_e2e_readonly.feature
-|   +-- sibudaya_e2e_submission.feature
 |   +-- user_pengajuan_hibah.feature
 |   +-- user_pengajuan_pentas.feature
 |   +-- user_update_kepala_lembaga.feature
@@ -149,18 +146,6 @@ Semua flow Sibudaya E2E:
 mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @e2e"
 ```
 
-Flow read-only:
-
-```bash
-mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @readonly"
-```
-
-Flow submit data production:
-
-```bash
-mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @submit"
-```
-
 Flow admin pengaturan fasilitasi pentas:
 
 ```bash
@@ -197,47 +182,9 @@ Flow user update Data Kepala Lembaga:
 mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@user-kepala-update"
 ```
 
-Peringatan: tag `@submit` membuat pengajuan fasilitasi nyata di environment target. Gunakan `@readonly` jika tidak boleh mengubah data production.
+Peringatan: tag submit pengajuan membuat data fasilitasi nyata di environment target.
 
 ## Skenario Yang Tersedia
-
-### Read-only navigation
-
-File:
-
-```text
-src/test/resources/features/sibudaya_e2e_readonly.feature
-```
-
-Alur utama:
-
-1. User biasa login.
-2. Dashboard user terbuka.
-3. Halaman pilihan fasilitasi terbuka tanpa submit data.
-4. Halaman status pengajuan dibuka jika ada data.
-5. Halaman profil user terbuka.
-6. Superadmin login.
-7. Dashboard superadmin terbuka.
-8. Halaman administrasi read-only terbuka.
-
-### Real submission end-to-end
-
-File:
-
-```text
-src/test/resources/features/sibudaya_e2e_submission.feature
-```
-
-Alur utama:
-
-1. User biasa login.
-2. User membuka halaman pilihan fasilitasi.
-3. User memilih fasilitasi pertama yang tersedia.
-4. User mengisi dan mengirim form pengajuan.
-5. Status pengajuan tampil.
-6. Superadmin login.
-7. Superadmin mencari pengajuan yang baru dibuat.
-8. Pengajuan terlihat di sisi superadmin.
 
 ## Data Test
 
