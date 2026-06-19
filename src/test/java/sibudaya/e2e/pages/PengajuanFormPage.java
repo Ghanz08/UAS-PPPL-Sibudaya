@@ -41,6 +41,8 @@ public class PengajuanFormPage extends BaseE2ePage {
     }
 
     private void fillCurrentStep(String marker, FasilitasiType type) {
+        String email = E2eTestData.uniqueEmail("pengajuan");
+        String phone = E2eTestData.uniquePhone();
         typeByNameIfPresent("namaLembaga", "Automation Sibudaya " + marker);
         typeByNameIfPresent("judulKegiatan", "Pengujian Otomatis " + marker);
         typeByNameIfPresent("namaKegiatan", "Pengujian Otomatis " + marker);
@@ -52,12 +54,12 @@ public class PengajuanFormPage extends BaseE2ePage {
         typeByNameIfPresent("alamat", "Jl. Malioboro No. 1, Yogyakarta");
         typeByNameIfPresent("alamatLengkap", "Jl. Malioboro No. 1, Yogyakarta");
         typeByNameIfPresent("alamatLembaga", "Jl. Malioboro No. 1, Yogyakarta");
-        typeByNameIfPresent("email", "automation@example.test");
-        typeByNameIfPresent("emailPic", "automation@example.test");
-        typeByNameIfPresent("noHp", "081234567890");
-        typeByNameIfPresent("no_hp", "081234567890");
-        typeByNameIfPresent("noHpPic", "081234567890");
-        typeByNameIfPresent("nomorHp", "081234567890");
+        typeByNameIfPresent("email", email);
+        typeByNameIfPresent("emailPic", email);
+        typeByNameIfPresent("noHp", phone);
+        typeByNameIfPresent("no_hp", phone);
+        typeByNameIfPresent("noHpPic", phone);
+        typeByNameIfPresent("nomorHp", phone);
         typeByNameIfPresent("jumlahPeserta", "25");
         typeByNameIfPresent("totalDana", "1000000");
         typeByNameIfPresent("total_dana", "1000000");

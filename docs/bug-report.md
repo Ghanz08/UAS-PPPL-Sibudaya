@@ -30,8 +30,10 @@ Hasil eksekusi automation UAT:
 8 Scenarios (8 passed)
 54 Steps (54 passed)
 Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
-BUILD SUCCESS
+Durasi: 13m50,483s
 ```
+
+Catatan automation: CRUD admin user, CRUD pengaturan fasilitasi Hibah, dan CRUD pengaturan fasilitasi Pentas dijalankan melalui UI Selenium. Log eksekusi mencetak data unik yang dibuat, dibaca, diubah, dihapus, dan diverifikasi hilang dari UI.
 
 ## Daftar Defect UAT
 
@@ -80,6 +82,18 @@ BUILD SUCCESS
 - Actual result: automation masih mengandalkan label, teks tombol, placeholder, dan struktur DOM.
 - Impact UAT: perubahan copy UI dapat membuat script regression perlu diperbarui walaupun fungsi aplikasi tetap benar.
 - Recommendation: tambahkan `data-testid` pada login input, tombol login, menu admin, tab fasilitasi, tombol tambah/edit/hapus, kartu pengajuan, form submit, dan field Data Kepala Lembaga.
+
+### UAT-OBS-004 - Endpoint login production dapat mengembalikan 429 saat regression panjang
+
+- Severity: Low
+- Priority: Medium
+- Status: Mitigated in automation
+- Skenario terkait: seluruh skenario yang berganti role user/superadmin
+- Expected result: automation dapat login secara stabil selama regression suite penuh.
+- Actual result: backend sesekali mengembalikan `429 Too Many Requests` pada `/api/v1/auth/login` jika login dipanggil terlalu sering.
+- Impact UAT: dapat membuat test flakey jika tidak ada retry dan token reuse.
+- Mitigation: automation membersihkan session saat ganti role, memakai token cache per credential, retry login dengan jeda, dan memvalidasi dashboard berdasarkan URL plus teks dashboard.
+- Recommendation: sediakan mode test-friendly rate limit untuk akun UAT atau token/session bootstrap khusus regression.
 
 ## Keputusan UAT
 

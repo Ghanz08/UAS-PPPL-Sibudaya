@@ -8,8 +8,6 @@ import org.openqa.selenium.WebElement;
 import sibudaya.e2e.support.E2eTestData;
 import shared.utils.WaitHelper;
 
-import java.util.Map;
-
 public class AdminUserManagementPage extends BaseE2ePage {
     public AdminUserManagementPage(WebDriver driver) {
         super(driver);
@@ -22,18 +20,25 @@ public class AdminUserManagementPage extends BaseE2ePage {
     }
 
     public void performCrud() {
-        String suffix = E2eTestData.marker().replace("AUTO-E2E-", "");
+        String suffix = E2eTestData.safeId().replaceAll("[^a-zA-Z0-9]", "");
         String firstName = "Auto" + suffix;
         String updatedFirstName = "AutoEdit" + suffix;
-        String email = "auto." + suffix + "@gmail.com";
-        String phone = "08" + suffix.substring(Math.max(0, suffix.length() - 10));
+        String email = E2eTestData.uniqueEmail("admin");
+        String phone = E2eTestData.uniquePhone();
 
         assertVisibleText("Manajemen Pengguna");
-        String userId = createAdminByApi(firstName, email, phone);
-        readAdminByApi(userId, email);
-        updateAdminByApi(userId, updatedFirstName, email, phone);
-        readAdminByApi(userId, updatedFirstName);
-        deleteAdminByApi(userId);
+        log("START CRUD admin user with data: firstName=" + firstName + ", updatedFirstName=" + updatedFirstName
+                + ", email=" + email + ", phone=" + phone);
+        createAdmin(firstName, email, phone);
+        readAdminInUi(firstName, email);
+        updateFirstName(updatedFirstName);
+        backToList();
+        readAdminInUi(updatedFirstName, email);
+        backToList();
+        search(updatedFirstName);
+        deleteAdmin(updatedFirstName);
+        assertAdminDeleted(updatedFirstName);
+        log("FINISH CRUD admin user via UI: email=" + email);
     }
 
     private void createAdmin(String firstName, String email, String phone) {
@@ -48,6 +53,23 @@ public class AdminUserManagementPage extends BaseE2ePage {
         typeByPlaceholder("Konfirmasi password", "AdminAuto@2026!");
         clickVisibleTextLinkOrButton("Daftarkan");
         waitForPage().until(webDriver -> webDriver.findElements(By.xpath("//*[contains(normalize-space(.), 'Registrasi Akun Admin')]")).stream().noneMatch(WebElement::isDisplayed));
+        log("SUCCESS create admin via UI: firstName=" + firstName + ", lastName=Automation, email=" + email
+                + ", phone=" + phone + ", address=Jl. Malioboro No. 1, Yogyakarta");
+    }
+
+    private void readAdminInUi(String expectedName, String email) {
+        search(expectedName);
+        assertVisibleText(expectedName);
+        assertVisibleAnyText(email, "Automation");
+        log("SUCCESS read admin via UI list: name=" + expectedName + ", email=" + email);
+        openDetail(expectedName);
+        assertVisibleAnyText(email, expectedName, "Automation");
+        log("SUCCESS read admin via UI detail: email=" + email + ", expectedName=" + expectedName);
+    }
+
+    private void backToList() {
+        clickFirstVisibleTextLinkOrButton("Kembali ke daftar", "Kembali");
+        assertVisibleText("Manajemen Pengguna");
     }
 
     private void search(String query) {
@@ -56,15 +78,22 @@ public class AdminUserManagementPage extends BaseE2ePage {
                 .filter(WebElement::isEnabled)
                 .findFirst()
                 .orElse(null));
-        search.click();
-        search.sendKeys(Keys.chord(Keys.CONTROL, "a"));
-        search.sendKeys(Keys.BACK_SPACE);
-        search.sendKeys(query);
+        ((JavascriptExecutor) driver).executeScript(
+                "const input = arguments[0]; const value = arguments[1];" +
+                        "input.scrollIntoView({block:'center', inline:'nearest'});" +
+                        "input.focus({preventScroll:true});" +
+                        "const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;" +
+                        "setter.call(input, value);" +
+                        "input.dispatchEvent(new Event('input', {bubbles:true}));" +
+                        "input.dispatchEvent(new Event('change', {bubbles:true}));",
+                search,
+                query
+        );
         WaitHelper.pauseForVisual();
     }
 
-    private void openDetail(String email) {
-        clickVisibleTextInScope(email, "Detail");
+    private void openDetail(String name) {
+        clickVisibleTextInScope(name, "Detail");
         assertVisibleText("Informasi Akun");
     }
 
@@ -72,6 +101,7 @@ public class AdminUserManagementPage extends BaseE2ePage {
         typeByLabel("Nama Depan", firstName);
         clickVisibleTextLinkOrButton("Edit Informasi Akun");
         waitForAnySuccessText("berhasil", firstName);
+        log("SUCCESS update admin via UI: firstName=" + firstName);
     }
 
     private void deleteAdmin(String name) {
@@ -90,6 +120,15 @@ public class AdminUserManagementPage extends BaseE2ePage {
         }
         assertVisibleText("Hapus Akun");
         clickVisibleTextLinkOrButton("Hapus");
+        log("SUCCESS delete admin via UI: name=" + name);
+    }
+
+    private void assertAdminDeleted(String name) {
+        search(name);
+        By rowLocator = By.xpath("//*[contains(normalize-space(.), " + xpathLiteral(name) + ")]"
+                + "[.//button[contains(normalize-space(.), 'Detail') or contains(normalize-space(.), 'Hapus') or contains(@aria-label, 'Hapus')]]");
+        waitForPage().until(webDriver -> webDriver.findElements(rowLocator).stream().noneMatch(WebElement::isDisplayed));
+        log("SUCCESS verify admin deleted via UI: name=" + name);
     }
 
     private void typeByPlaceholder(String placeholder, String value) {
@@ -104,64 +143,7 @@ public class AdminUserManagementPage extends BaseE2ePage {
         element.sendKeys(value);
     }
 
-    @SuppressWarnings("unchecked")
-    private String createAdminByApi(String firstName, String email, String phone) {
-        Map<String, Object> result = (Map<String, Object>) executeApiScript(
-                "const firstName = a[0]; const email = a[1]; const phone = a[2];" +
-                        "return await req('/admin/pengaturan-akun/admins', 'POST', {first_name: firstName, last_name: 'Automation', email, no_telp: phone, address: 'Jl. Malioboro No. 1, Yogyakarta', password: 'AdminAuto@2026!', confirm_password: 'AdminAuto@2026!'});",
-                firstName, email, phone
-        );
-        Object id = firstNonNull(result.get("id"), result.get("user_id"), result.get("userId"));
-        if (id == null) {
-            throw new AssertionError("Create admin response has no id: " + result);
-        }
-        return String.valueOf(id);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void readAdminByApi(String userId, String expectedText) {
-        Map<String, Object> result = (Map<String, Object>) executeApiScript("return await req('/admin/pengaturan-akun/admins/' + a[0], 'GET');", userId);
-        String body = result.toString().toLowerCase();
-        if (!body.contains(expectedText.toLowerCase())) {
-            throw new AssertionError("Admin read response does not contain " + expectedText + ": " + result);
-        }
-    }
-
-    private void updateAdminByApi(String userId, String firstName, String email, String phone) {
-        executeApiScript(
-                "return await req('/admin/pengaturan-akun/admins/' + a[0], 'PATCH', {first_name: a[1], last_name: 'Automation', email: a[2], no_telp: a[3], address: 'Jl. Malioboro No. 2, Yogyakarta'});",
-                userId, firstName, email, phone
-        );
-    }
-
-    private void deleteAdminByApi(String userId) {
-        executeApiScript("return await req('/admin/pengaturan-akun/admins/' + a[0], 'DELETE');", userId);
-    }
-
-    private Object executeApiScript(String body, Object... args) {
-        String script = "const done = arguments[arguments.length - 1];" +
-                "const userArgs = Array.from(arguments).slice(0, -1);" +
-                "const token = window.localStorage.getItem('access_token');" +
-                "const base = '/sibudaya/api/v1';" +
-                "const a = userArgs;" +
-                "const req = async (path, method, payload) => {" +
-                " const res = await fetch(base + path, {method, credentials: 'include', headers: {'Content-Type':'application/json', ...(token ? {Authorization:'Bearer ' + token} : {})}, ...(payload !== undefined ? {body: JSON.stringify(payload)} : {})});" +
-                " const text = await res.text(); const data = text ? JSON.parse(text) : {};" +
-                " if (!res.ok) throw new Error(method + ' ' + path + ' failed: ' + res.status + ' ' + text);" +
-                " return data && data.data ? data.data : data;" +
-                "};" +
-                "(async () => {" + body + "})().then(done).catch((error) => done({__error: String(error && error.message ? error.message : error)}));";
-        Object result = ((JavascriptExecutor) driver).executeAsyncScript(script, args);
-        if (result instanceof Map<?, ?> map && map.containsKey("__error")) {
-            throw new AssertionError(map.get("__error"));
-        }
-        return result;
-    }
-
-    private Object firstNonNull(Object... values) {
-        for (Object value : values) {
-            if (value != null) return value;
-        }
-        return null;
+    private void log(String message) {
+        System.out.println("[E2E CRUD][Admin User] " + message);
     }
 }

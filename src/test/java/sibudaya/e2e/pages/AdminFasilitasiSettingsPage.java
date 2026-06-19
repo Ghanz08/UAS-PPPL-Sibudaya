@@ -1,11 +1,10 @@
 package sibudaya.e2e.pages;
 
-import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import sibudaya.e2e.support.E2eTestData;
 import sibudaya.e2e.support.FasilitasiType;
-
-import java.util.Map;
 
 public class AdminFasilitasiSettingsPage extends BaseE2ePage {
     public AdminFasilitasiSettingsPage(WebDriver driver) {
@@ -15,118 +14,182 @@ public class AdminFasilitasiSettingsPage extends BaseE2ePage {
     public void open() {
         openPath("/dashboard/admin/pengaturan-fasilitasi");
         waitForUrlContains("/dashboard/admin/pengaturan-fasilitasi");
+        assertVisibleAnyText("General", "Pentas", "Hibah", "Pengaturan Fasilitasi");
     }
 
     public void performCrud(FasilitasiType type) {
         openTab(type);
-        String marker = "AUTO-" + type.label().toUpperCase() + "-" + E2eTestData.marker();
+        String marker = shortMarker(type);
         String updatedMarker = marker + "-EDIT";
 
-        String paketId = createPaketByApi(type, marker);
-        readPaketByApi(type, paketId, marker);
-        updatePaketByApi(paketId, updatedMarker);
-        readPaketByApi(type, paketId, updatedMarker);
-        deletePaketByApi(paketId);
+        log("START CRUD paket fasilitasi: type=" + type.label() + ", jenisId=" + type.jenisId()
+                + ", marker=" + marker + ", updatedMarker=" + updatedMarker);
+        createJenis(type, marker);
+        readJenisInUi(type, marker);
+        updateJenis(type, marker, updatedMarker);
+        readJenisInUi(type, updatedMarker);
+        deleteJenis(type, updatedMarker);
+        assertJenisDeleted(type, updatedMarker);
+        log("FINISH CRUD paket fasilitasi via UI: type=" + type.label() + ", marker=" + marker
+                + ", updatedMarker=" + updatedMarker);
     }
 
     private void openTab(FasilitasiType type) {
-        // The CRUD contract is verified through the authenticated admin API below.
+        assertVisibleAnyText("General", "Pentas", "Hibah");
+        String label = type == FasilitasiType.PENTAS ? "Pentas" : "Hibah";
+        clickFirstVisibleTextLinkOrButton(label);
+        assertVisibleText("Jenis Fasilitasi");
+        log("Opened fasilitasi tab via UI: type=" + type.label());
     }
 
     private void createJenis(FasilitasiType type, String marker) {
-        clickVisibleTextLinkOrButton("Tambah Jenis");
-        assertVisibleAnyText("Tambah Jenis Fasilitasi", "Tambah Jenis Fasilitasi Hibah");
-        typeByLabel("Jenis Fasilitasi", marker);
-        typeByLabel("Kuota Pengajuan", "9");
+        assertVisibleAnyText("Jenis Fasilitasi", "Kuota Pengajuan", "Tambah Jenis");
+        clickFirstVisibleTextLinkOrButton("Tambah Jenis", "Tambah Paket", "Tambah Fasilitasi");
+        String dialogTitle = type == FasilitasiType.HIBAH ? "Tambah Jenis Fasilitasi Hibah" : "Tambah Jenis Fasilitasi";
+        assertVisibleText(dialogTitle);
+        typeByFirstLabel(marker, "Jenis Fasilitasi", "Nama Paket", "Nama Fasilitasi");
+        typeByFirstLabel("9", "Kuota Pengajuan", "Kuota");
         if (type == FasilitasiType.PENTAS) {
-            typeByLabel("Dana Pembinaan", "15000000");
+            typeByFirstLabel("15000000", "Dana Pembinaan", "Nilai Bantuan", "Nominal Bantuan");
         }
-        selectByLabel("Aturan Pengajuan", "BERKALI_KALI");
-        clickVisibleTextLinkOrButton("Tambah Jenis");
-        waitForAnySuccessText("berhasil ditambahkan");
+        selectByFirstLabel("BERKALI_KALI", "Aturan Pengajuan", "Frekuensi Pengajuan");
+        clickDialogButton(dialogTitle, "Tambah Jenis", "Simpan", "Tambah");
+        waitForDialogClosed(dialogTitle);
+        waitForAnySuccessText(type == FasilitasiType.HIBAH
+                ? "Jenis fasilitasi hibah berhasil ditambahkan."
+                : "Jenis fasilitasi berhasil ditambahkan.");
+        log("SUCCESS create fasilitasi via UI: type=" + type.label() + ", nama=" + marker
+                + ", kuota=9, nilai_bantuan=" + (type == FasilitasiType.PENTAS ? "15000000" : "null")
+                + ", aturan=BERKALI_KALI");
     }
 
-    private void updateJenis(String currentMarker, String updatedMarker) {
-        clickVisibleTextInScope(currentMarker, "Edit");
-        assertVisibleAnyText("Edit Jenis Fasilitasi", "Edit Jenis Fasilitasi Hibah");
-        typeByLabel("Jenis Fasilitasi", updatedMarker);
-        typeByLabel("Kuota Pengajuan", "11");
-        clickVisibleTextLinkOrButton("Simpan Perubahan");
-        waitForAnySuccessText("berhasil diperbarui");
+    private void readJenisInUi(FasilitasiType type, String marker) {
+        openTab(type);
+        assertVisibleText(marker);
+        log("SUCCESS read fasilitasi via UI: type=" + type.label() + ", nama=" + marker);
     }
 
-    private void deleteJenis(String marker) {
-        clickVisibleTextInScope(marker, "Hapus");
+    private void updateJenis(FasilitasiType type, String currentMarker, String updatedMarker) {
+        clickMarkerRowAction(currentMarker, "Edit");
+        String dialogTitle = type == FasilitasiType.HIBAH ? "Edit Jenis Fasilitasi Hibah" : "Edit Jenis Fasilitasi";
+        assertVisibleText(dialogTitle);
+        typeByFirstLabel(updatedMarker, "Jenis Fasilitasi", "Nama Paket", "Nama Fasilitasi");
+        typeByFirstLabel("11", "Kuota Pengajuan", "Kuota");
+        clickDialogButton(dialogTitle, "Simpan Perubahan", "Simpan");
+        waitForDialogClosed(dialogTitle);
+        waitForAnySuccessText(type == FasilitasiType.HIBAH
+                ? "Jenis fasilitasi hibah berhasil diperbarui."
+                : "Jenis fasilitasi berhasil diperbarui.");
+        log("SUCCESS update fasilitasi via UI: from=" + currentMarker + ", to=" + updatedMarker + ", kuota=11");
     }
 
-    @SuppressWarnings("unchecked")
-    private String createPaketByApi(FasilitasiType type, String marker) {
-        Map<String, Object> result = (Map<String, Object>) executeApiScript(
-                "const jenisId = a[0]; const marker = a[1];" +
-                        "return await req('/admin/fasilitasi/' + jenisId + '/paket', 'POST', {" +
-                        "nama_paket: marker, kuota: 9, nilai_bantuan: jenisId === 1 ? '15000000' : undefined, frekuensi_pengajuan: 'BERKALI_KALI'});",
-                type.jenisId(), marker
+    private void deleteJenis(FasilitasiType type, String marker) {
+        clickMarkerRowAction(marker, "Hapus");
+        waitForAnySuccessText(type == FasilitasiType.HIBAH
+                ? "Jenis fasilitasi hibah berhasil dihapus."
+                : "Jenis fasilitasi berhasil dihapus.");
+        log("SUCCESS delete fasilitasi via UI: nama=" + marker);
+    }
+
+    private void assertJenisDeleted(FasilitasiType type, String marker) {
+        waitForPage().until(webDriver -> webDriver.findElements(textLocator(marker)).stream().noneMatch(WebElement::isDisplayed));
+        log("SUCCESS verify fasilitasi deleted via UI: nama=" + marker);
+    }
+
+    private void clickMarkerRowAction(String marker, String action) {
+        String markerLiteral = xpathLiteral(marker);
+        String actionLiteral = xpathLiteral(action);
+        By locator = By.xpath(
+                "//*[not(*) and contains(normalize-space(.), " + markerLiteral + ")]" +
+                        "/ancestor::*[.//button[contains(normalize-space(.), " + actionLiteral + ")]][1]" +
+                        "//button[contains(normalize-space(.), " + actionLiteral + ")]"
         );
-        Object id = firstNonNull(result.get("paket_id"), result.get("paketId"), result.get("id"));
-        if (id == null) {
-            throw new AssertionError("Create paket response has no id: " + result);
+        for (WebElement button : driver.findElements(locator)) {
+            if (button.isDisplayed() && button.isEnabled()) {
+                clickElement(button);
+                return;
+            }
         }
-        return String.valueOf(id);
+        throw new AssertionError("Could not click " + action + " for fasilitasi marker " + marker
+                + System.lineSeparator() + visibleText());
     }
 
-    @SuppressWarnings("unchecked")
-    private void readPaketByApi(FasilitasiType type, String paketId, String expectedName) {
-        Object result = executeApiScript(
-                "const jenisId = a[0]; const paketId = String(a[1]); const expectedName = a[2];" +
-                        "const rows = await req('/admin/fasilitasi/' + jenisId + '/kuota', 'GET');" +
-                        "const list = Array.isArray(rows) ? rows : (rows.data || rows.items || []);" +
-                        "const item = list.find((row) => String(row.paket_id || row.paketId || row.id) === paketId || row.nama_paket === expectedName);" +
-                        "if (!item) throw new Error('Paket not found after CRUD op: ' + expectedName);" +
-                        "if (item.nama_paket !== expectedName) throw new Error('Unexpected paket name: ' + item.nama_paket);" +
-                        "return item;",
-                type.jenisId(), paketId, expectedName
-        );
-        if (!(result instanceof Map)) {
-            throw new AssertionError("Invalid paket read response: " + result);
+    private void typeByFirstLabel(String value, String... labels) {
+        RuntimeException lastRuntime = null;
+        AssertionError lastAssertion = null;
+        for (String label : labels) {
+            try {
+                typeByLabel(label, value);
+                return;
+            } catch (AssertionError failure) {
+                lastAssertion = failure;
+            } catch (RuntimeException failure) {
+                lastRuntime = failure;
+            }
         }
-    }
-
-    private void updatePaketByApi(String paketId, String updatedMarker) {
-        executeApiScript(
-                "const paketId = a[0]; const marker = a[1];" +
-                        "return await req('/admin/fasilitasi/paket/' + paketId, 'PATCH', {nama_paket: marker, kuota: 11, frekuensi_pengajuan: 'BERKALI_KALI'});",
-                paketId, updatedMarker
-        );
-    }
-
-    private void deletePaketByApi(String paketId) {
-        executeApiScript("return await req('/admin/fasilitasi/paket/' + a[0], 'DELETE');", paketId);
-    }
-
-    private Object executeApiScript(String body, Object... args) {
-        String script = "const done = arguments[arguments.length - 1];" +
-                "const userArgs = Array.from(arguments).slice(0, -1);" +
-                "const token = window.localStorage.getItem('access_token');" +
-                "const base = '/sibudaya/api/v1';" +
-                "const a = userArgs;" +
-                "const req = async (path, method, payload) => {" +
-                " const res = await fetch(base + path, {method, credentials: 'include', headers: {'Content-Type':'application/json', ...(token ? {Authorization:'Bearer ' + token} : {})}, ...(payload !== undefined ? {body: JSON.stringify(payload)} : {})});" +
-                " const text = await res.text(); const data = text ? JSON.parse(text) : {};" +
-                " if (!res.ok) throw new Error(method + ' ' + path + ' failed: ' + res.status + ' ' + text);" +
-                " return data && data.data ? data.data : data;" +
-                "};" +
-                "(async () => {" + body + "})().then(done).catch((error) => done({__error: String(error && error.message ? error.message : error)}));";
-        Object result = ((JavascriptExecutor) driver).executeAsyncScript(script, args);
-        if (result instanceof Map<?, ?> map && map.containsKey("__error")) {
-            throw new AssertionError(map.get("__error"));
+        if (lastAssertion != null) {
+            if (lastRuntime != null) lastAssertion.addSuppressed(lastRuntime);
+            throw lastAssertion;
         }
-        return result;
+        if (lastRuntime != null) {
+            throw lastRuntime;
+        }
+        throw new AssertionError("No matching label for value " + value);
     }
 
-    private Object firstNonNull(Object... values) {
-        for (Object value : values) {
-            if (value != null) return value;
+    private void selectByFirstLabel(String value, String... labels) {
+        RuntimeException lastRuntime = null;
+        AssertionError lastAssertion = null;
+        for (String label : labels) {
+            try {
+                selectByLabel(label, value);
+                return;
+            } catch (AssertionError failure) {
+                lastAssertion = failure;
+            } catch (RuntimeException failure) {
+                lastRuntime = failure;
+            }
         }
-        return null;
+        if (lastAssertion != null) {
+            if (lastRuntime != null) lastAssertion.addSuppressed(lastRuntime);
+            throw lastAssertion;
+        }
+        if (lastRuntime != null) {
+            throw lastRuntime;
+        }
+        throw new AssertionError("No matching select label for value " + value);
+    }
+
+    private String shortMarker(FasilitasiType type) {
+        String raw = E2eTestData.safeId().replaceAll("[^a-zA-Z0-9]", "");
+        String suffix = raw.substring(Math.max(0, raw.length() - 8));
+        return "AUTO-" + type.label().toUpperCase() + "-" + suffix;
+    }
+
+    private void clickDialogButton(String title, String... labels) {
+        String titleLiteral = xpathLiteral(title);
+        for (String label : labels) {
+            String labelLiteral = xpathLiteral(label);
+            for (WebElement button : driver.findElements(By.xpath(
+                    "//dialog[.//*[contains(normalize-space(.), " + titleLiteral + ")]]//button[contains(normalize-space(.), " + labelLiteral + ")]"
+            ))) {
+                if (button.isDisplayed() && button.isEnabled()) {
+                    clickElement(button);
+                    return;
+                }
+            }
+        }
+        throw new AssertionError("Could not click dialog button for " + title + System.lineSeparator() + visibleText());
+    }
+
+    private void waitForDialogClosed(String title) {
+        String titleLiteral = xpathLiteral(title);
+        waitForPage().until(webDriver -> webDriver.findElements(By.xpath(
+                "//dialog[@open and .//*[contains(normalize-space(.), " + titleLiteral + ")]]"
+        )).stream().noneMatch(WebElement::isDisplayed));
+    }
+
+    private void log(String message) {
+        System.out.println("[E2E CRUD][Fasilitasi Settings] " + message);
     }
 }

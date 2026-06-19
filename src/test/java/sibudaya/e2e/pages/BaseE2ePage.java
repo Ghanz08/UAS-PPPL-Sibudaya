@@ -46,24 +46,53 @@ public abstract class BaseE2ePage {
         }
     }
 
+    protected void waitForUrlAndAnyText(String fragment, String... texts) {
+        try {
+            waitForPage().until(webDriver -> webDriver.getCurrentUrl().contains(fragment) && pageContainsAnyText(texts));
+        } catch (TimeoutException exception) {
+            throw new AssertionError("Expected URL to contain " + fragment + " and page to contain one of "
+                    + String.join(", ", texts) + " but was " + driver.getCurrentUrl()
+                    + System.lineSeparator() + visibleText(), exception);
+        }
+    }
+
+    protected boolean pageContainsAnyText(String... texts) {
+        String body = driver.findElement(By.tagName("body")).getText().toLowerCase();
+        for (String text : texts) {
+            if (body.contains(text.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected String visibleText() {
         String text = driver.findElement(By.tagName("body")).getText();
         return text.length() > 2000 ? text.substring(0, 2000) + "..." : text;
     }
 
     public void assertVisibleText(String text) {
-        waitForPage().until(ExpectedConditions.visibilityOfElementLocated(textLocator(text)));
+        try {
+            waitForPage().until(ExpectedConditions.visibilityOfElementLocated(textLocator(text)));
+        } catch (TimeoutException exception) {
+            throw new AssertionError("Expected visible text: " + text + System.lineSeparator() + visibleText(), exception);
+        }
     }
 
     public void assertVisibleAnyText(String... texts) {
-        waitForPage().until(webDriver -> {
-            for (String text : texts) {
-                if (webDriver.findElements(textLocator(text)).stream().anyMatch(WebElement::isDisplayed)) {
-                    return true;
+        try {
+            waitForPage().until(webDriver -> {
+                for (String text : texts) {
+                    if (webDriver.findElements(textLocator(text)).stream().anyMatch(WebElement::isDisplayed)) {
+                        return true;
+                    }
                 }
-            }
-            return false;
-        });
+                return false;
+            });
+        } catch (TimeoutException exception) {
+            throw new AssertionError("Expected one visible text: " + String.join(", ", texts)
+                    + System.lineSeparator() + visibleText(), exception);
+        }
     }
 
     protected void clickTextLinkOrButton(String text) {
@@ -86,6 +115,31 @@ public abstract class BaseE2ePage {
             }
         }
         clickTextLinkOrButton(text);
+    }
+
+    protected void clickFirstVisibleTextLinkOrButton(String... texts) {
+        for (String text : texts) {
+            List<WebElement> elements = driver.findElements(By.xpath(
+                    "//a[contains(normalize-space(.), " + xpathLiteral(text) + ")] | //button[contains(normalize-space(.), " + xpathLiteral(text) + ")]"
+            ));
+            for (int i = elements.size() - 1; i >= 0; i--) {
+                WebElement element = elements.get(i);
+                if (element.isDisplayed() && element.isEnabled()) {
+                    WaitHelper.pauseForVisual();
+                    clickElement(element);
+                    return;
+                }
+            }
+        }
+        StringBuilder xpath = new StringBuilder();
+        for (String text : texts) {
+            if (!xpath.isEmpty()) {
+                xpath.append(" | ");
+            }
+            xpath.append("//a[contains(normalize-space(.), ").append(xpathLiteral(text)).append(")] | //button[contains(normalize-space(.), ").append(xpathLiteral(text)).append(")]");
+        }
+        WaitHelper.pauseForVisual();
+        waitForPage().until(ExpectedConditions.elementToBeClickable(By.xpath(xpath.toString()))).click();
     }
 
     protected void clickVisibleTextInScope(String scopeText, String actionText) {
@@ -142,17 +196,26 @@ public abstract class BaseE2ePage {
 
     protected WebElement findControlByLabel(String label) {
         String literal = xpathLiteral(label);
-        By locator = By.xpath(
-                "//label[.//*[normalize-space(.)=" + literal + "] or contains(normalize-space(.), " + literal + ")]//*[self::input or self::textarea or self::select]"
-                        + " | //label[normalize-space(.)=" + literal + "]/following-sibling::*//*[self::input or self::textarea or self::select]"
-                        + " | //label[normalize-space(.)=" + literal + "]/following-sibling::*[self::input or self::textarea or self::select]"
-                        + " | //*[normalize-space(.)=" + literal + "]/ancestor::div[1]//*[self::input or self::textarea or self::select]"
-        );
-        return waitForPage().until(webDriver -> webDriver.findElements(locator).stream()
-                .filter(WebElement::isDisplayed)
-                .filter(WebElement::isEnabled)
-                .findFirst()
-                .orElse(null));
+        By[] locators = {
+                By.xpath("//*[normalize-space(.)=" + literal + "]/ancestor::label[1]//*[self::input or self::textarea or self::select]"),
+                By.xpath("//label[.//*[normalize-space(.)=" + literal + "] or contains(normalize-space(.), " + literal + ")]//*[self::input or self::textarea or self::select]"),
+                By.xpath("//label[normalize-space(.)=" + literal + "]/following-sibling::*[self::input or self::textarea or self::select]"),
+                By.xpath("//label[normalize-space(.)=" + literal + "]/following-sibling::*//*[self::input or self::textarea or self::select]"),
+                By.xpath("//*[normalize-space(.)=" + literal + "]/ancestor::div[1]//*[self::input or self::textarea or self::select]")
+        };
+        return waitForPage().until(webDriver -> {
+            for (By locator : locators) {
+                WebElement element = webDriver.findElements(locator).stream()
+                        .filter(WebElement::isDisplayed)
+                        .filter(WebElement::isEnabled)
+                        .findFirst()
+                        .orElse(null);
+                if (element != null) {
+                    return element;
+                }
+            }
+            return null;
+        });
     }
 
     protected void clickElement(WebElement element) {
@@ -218,15 +281,20 @@ public abstract class BaseE2ePage {
     }
 
     protected void waitForAnySuccessText(String... texts) {
-        waitForPage().until(webDriver -> {
-            String body = webDriver.findElement(By.tagName("body")).getText().toLowerCase();
-            for (String text : texts) {
-                if (body.contains(text.toLowerCase())) {
-                    return true;
+        try {
+            waitForPage().until(webDriver -> {
+                String body = webDriver.findElement(By.tagName("body")).getText().toLowerCase();
+                for (String text : texts) {
+                    if (body.contains(text.toLowerCase())) {
+                        return true;
+                    }
                 }
-            }
-            return false;
-        });
+                return false;
+            });
+        } catch (TimeoutException exception) {
+            throw new AssertionError("Expected success text: " + String.join(", ", texts)
+                    + System.lineSeparator() + visibleText(), exception);
+        }
     }
 
     protected void abortIfMissing(By locator, String message) {

@@ -7,13 +7,28 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class E2eTestData {
     private E2eTestData() {
     }
 
     public static String marker() {
-        return "AUTO-E2E-" + DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now());
+        return "AUTO-E2E-" + safeId();
+    }
+
+    public static String safeId() {
+        return DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS").format(LocalDateTime.now())
+                + "-" + Integer.toUnsignedString(ThreadLocalRandom.current().nextInt(), 36);
+    }
+
+    public static String uniqueEmail(String prefix) {
+        return prefix + "." + safeId().replaceAll("[^a-zA-Z0-9]", "") + "@gmail.com";
+    }
+
+    public static String uniquePhone() {
+        long number = ThreadLocalRandom.current().nextLong(1_000_000_000L, 9_999_999_999L);
+        return "08" + number;
     }
 
     public static LocalDate eventDate() {

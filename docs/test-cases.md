@@ -1,51 +1,54 @@
-# Test Case Sibudaya E2E
+# Sibudaya E2E Test Cases
 
 SUT: aplikasi web Sibudaya di `https://www.sibudaya.cloud/sibudaya`.
 
-## TC-ADM-001 - CRUD Pengaturan Fasilitasi Pentas
+Dokumen ini mengikuti struktur workbook `outputs/test-cases/sibudaya-e2e-test-cases-structured.xlsx`.
 
-- Tag: `@admin-pentas-crud`
-- Aktor: superadmin
-- Precondition: superadmin dapat login.
-- Langkah: login, buka Pengaturan Fasilitasi, pilih tab Fasilitasi Pentas, tambah jenis fasilitasi, validasi data tampil, edit data, validasi perubahan tampil, hapus data.
-- Expected: data pentas berhasil dibuat, dibaca, diperbarui, lalu dihapus.
+## Summary
 
-## TC-ADM-002 - CRUD Pengaturan Fasilitasi Hibah
+| No | Kode TC | Modul | Fitur | Tipe | Deskripsi Singkat | Metode | Precondition | Test Steps | Expected Result | Actual Result | Status | Tester | Tanggal Test | Catatan |
+|---:|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | M2F1-P01 | M2 Dashboard | Navigasi User & Superadmin | POSITIF | User biasa dan superadmin membuka halaman read-only sesuai urutan | E2E | Credential user biasa dan superadmin tersedia. Base URL Sibudaya aktif. Chrome tersedia. | 1. Jalankan command: `mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @readonly"`<br>2. Login sebagai user biasa<br>3. Validasi dashboard user tampil<br>4. Buka halaman `/dashboard/ajukan-fasilitasi`<br>5. Validasi halaman pilihan fasilitasi tampil tanpa submit data<br>6. Buka status pengajuan existing jika tersedia<br>7. Buka halaman profil user<br>8. Login sebagai superadmin<br>9. Validasi dashboard superadmin tampil<br>10. Buka halaman administrasi read-only | Semua halaman read-only berhasil dibuka. Dashboard user, pilihan fasilitasi, profil/fallback, dashboard superadmin, dan halaman administrasi tampil tanpa mengubah data. | Semua langkah berhasil pada run final. | Pass | SYAM | 2026-06-19 | Tag: `@sibudaya and @readonly`. Aman untuk production karena tidak submit data. |
+| 2 | M3F1-P01 | M3 Fasilitasi | Pengajuan Fasilitasi | POSITIF | User biasa submit pengajuan fasilitasi dan superadmin dapat melihat pengajuan tersebut | E2E | Credential user biasa dan superadmin tersedia. Akun user memiliki fasilitasi yang tersedia. File proposal PDF tersedia. Environment target boleh menerima data pengajuan nyata. | 1. Jalankan command: `mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @submit"`<br>2. Login sebagai user biasa<br>3. Validasi dashboard user tampil<br>4. Buka halaman pilihan fasilitasi<br>5. Pilih fasilitasi pertama yang tersedia<br>6. Isi form pengajuan dengan marker `AUTO-E2E-yyyyMMddHHmmss`<br>7. Upload `proposal-e2e-sample.pdf` jika field file tersedia<br>8. Klik Ajukan/Kirim/Submit<br>9. Validasi halaman status pengajuan tampil<br>10. Login sebagai superadmin<br>11. Cari pengajuan berdasarkan marker<br>12. Validasi pengajuan terlihat di sisi superadmin | Pengajuan fasilitasi berhasil dibuat. Halaman status pengajuan tampil. Superadmin dapat menemukan dan membuka pengajuan baru berdasarkan marker otomatis. | Pengajuan berhasil dibuat dan terlihat oleh superadmin. | Pass | SYAM | 2026-06-19 | Tag: `@sibudaya and @submit`. Mengubah data production. |
+| 3 | M4F1-P01 | M4 Admin | CRUD Manajemen Pengguna | POSITIF | Superadmin membuat, membaca, mengubah, dan menghapus akun admin melalui UI | E2E UI | Credential superadmin tersedia. Halaman Manajemen Pengguna aktif. | 1. Jalankan command: `mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@admin-user-crud"`<br>2. Login superadmin<br>3. Buka Manajemen Pengguna<br>4. Klik Tambahkan Admin<br>5. Isi nama, email unik, nomor HP unik, alamat, password<br>6. Submit form<br>7. Cari admin baru di UI<br>8. Buka detail dan validasi data<br>9. Ubah nama depan<br>10. Cari ulang data update<br>11. Hapus akun<br>12. Validasi data tidak muncul lagi di UI | Admin baru dibuat lewat UI, terbaca di list/detail, berhasil diupdate, berhasil dihapus, dan tidak muncul setelah delete. | CRUD admin user berhasil via UI. Log mencetak data create/read/update/delete. | Pass | SYAM | 2026-06-19 | Tag: `@admin-user-crud`. Data test unik: `admin.<timestamp><random>@gmail.com`. |
+| 4 | M4F2-P01 | M4 Admin | CRUD Pengaturan Fasilitasi Hibah | POSITIF | Superadmin membuat, membaca, mengubah, dan menghapus jenis fasilitasi Hibah melalui UI | E2E UI | Credential superadmin tersedia. Halaman Pengaturan Fasilitasi aktif. | 1. Jalankan command: `mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@admin-hibah-crud"`<br>2. Login superadmin<br>3. Buka Pengaturan Fasilitasi<br>4. Pilih tab Hibah<br>5. Klik Tambah Jenis<br>6. Isi nama unik `AUTO-HIBAH-...`, kuota, aturan pengajuan<br>7. Simpan<br>8. Validasi data muncul di UI<br>9. Edit nama dan kuota<br>10. Validasi data update muncul di UI<br>11. Hapus data<br>12. Validasi data tidak muncul lagi di UI | Jenis fasilitasi Hibah dibuat lewat UI, terbaca, berhasil diupdate, berhasil dihapus, dan tidak muncul setelah delete. | CRUD Hibah berhasil via UI. Log mencetak marker create/read/update/delete. | Pass | SYAM | 2026-06-19 | Tag: `@admin-hibah-crud`. |
+| 5 | M4F3-P01 | M4 Admin | CRUD Pengaturan Fasilitasi Pentas | POSITIF | Superadmin membuat, membaca, mengubah, dan menghapus jenis fasilitasi Pentas melalui UI | E2E UI | Credential superadmin tersedia. Halaman Pengaturan Fasilitasi aktif. | 1. Jalankan command: `mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@admin-pentas-crud"`<br>2. Login superadmin<br>3. Buka Pengaturan Fasilitasi<br>4. Pilih tab Pentas<br>5. Klik Tambah Jenis<br>6. Isi nama unik `AUTO-PENTAS-...`, kuota, dana pembinaan, aturan pengajuan<br>7. Simpan<br>8. Validasi data muncul di UI<br>9. Edit nama dan kuota<br>10. Validasi data update muncul di UI<br>11. Hapus data<br>12. Validasi data tidak muncul lagi di UI | Jenis fasilitasi Pentas dibuat lewat UI, terbaca, berhasil diupdate, berhasil dihapus, dan tidak muncul setelah delete. | CRUD Pentas berhasil via UI. Log mencetak marker create/read/update/delete. | Pass | SYAM | 2026-06-19 | Tag: `@admin-pentas-crud`. |
+| 6 | M3F2-P01 | M3 Fasilitasi | Pengajuan Hibah | POSITIF | User biasa submit pengajuan Hibah | E2E UI | Credential user biasa tersedia. Paket Hibah tersedia. File proposal PDF tersedia. | 1. Jalankan command: `mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@user-hibah-submit"`<br>2. Login user<br>3. Buka Ajukan Fasilitasi<br>4. Pilih Hibah<br>5. Isi form dengan data unik<br>6. Upload PDF jika tersedia<br>7. Submit<br>8. Validasi status pengajuan tampil | Pengajuan Hibah berhasil dibuat dan halaman status tampil. | Pengajuan Hibah berhasil. | Pass | SYAM | 2026-06-19 | Tag: `@user-hibah-submit`. |
+| 7 | M3F3-P01 | M3 Fasilitasi | Pengajuan Pentas | POSITIF | User biasa submit pengajuan Pentas | E2E UI | Credential user biasa tersedia. Paket Pentas tersedia. File proposal PDF tersedia. | 1. Jalankan command: `mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@user-pentas-submit"`<br>2. Login user<br>3. Buka Ajukan Fasilitasi<br>4. Pilih Pentas<br>5. Isi form dengan data unik<br>6. Upload PDF jika tersedia<br>7. Submit<br>8. Validasi status pengajuan tampil | Pengajuan Pentas berhasil dibuat dan halaman status tampil. | Pengajuan Pentas berhasil. | Pass | SYAM | 2026-06-19 | Tag: `@user-pentas-submit`. |
+| 8 | M5F1-P01 | M5 Profil | Update Data Kepala Lembaga | POSITIF | User biasa mengubah nama depan Kepala Lembaga melalui UI | E2E UI | Credential user biasa tersedia. Halaman profil dapat dibuka. | 1. Jalankan command: `mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@user-kepala-update"`<br>2. Login user<br>3. Buka profil<br>4. Buka bagian Data Kepala Lembaga<br>5. Ubah nama depan dengan data unik<br>6. Simpan<br>7. Validasi success message atau nilai update tampil | Nama depan Kepala Lembaga berhasil diubah dan tersimpan. | Update Kepala Lembaga berhasil. | Pass | SYAM | 2026-06-19 | Tag: `@user-kepala-update`. |
 
-- Tag: `@admin-hibah-crud`
-- Aktor: superadmin
-- Precondition: superadmin dapat login.
-- Langkah: login, buka Pengaturan Fasilitasi, pilih tab Fasilitasi Hibah, tambah jenis fasilitasi, validasi data tampil, edit data, validasi perubahan tampil, hapus data.
-- Expected: data hibah berhasil dibuat, dibaca, diperbarui, lalu dihapus.
+## Run 1 - Readonly
 
-## TC-ADM-003 - CRUD Manajemen Pengguna
+### M2F1-P01 - Navigasi User & Superadmin
 
-- Tag: `@admin-user-crud`
-- Aktor: superadmin
-- Precondition: superadmin dapat login.
-- Langkah: login, buka Manajemen Pengguna, tambahkan admin, cari data admin baru, buka detail, edit nama depan, validasi perubahan, hapus admin.
-- Expected: akun admin berhasil dibuat, dibaca, diperbarui, lalu dihapus.
+| No | Kode TC | Modul | Fitur | Tipe | Deskripsi Singkat | Metode | Precondition | Test Steps | Expected Result | Actual Result | Status | Tester | Tanggal Test | Catatan |
+|---:|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | M2F1-P01 | M2 Dashboard | Navigasi User & Superadmin | POSITIF | User biasa dan superadmin membuka halaman read-only sesuai urutan | E2E | Credential user biasa dan superadmin tersedia. Base URL Sibudaya aktif. Chrome tersedia. | 1. Jalankan command: `mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @readonly"`<br>2. Login sebagai user biasa<br>3. Validasi dashboard user tampil<br>4. Buka halaman `/dashboard/ajukan-fasilitasi`<br>5. Validasi halaman pilihan fasilitasi tampil tanpa submit data<br>6. Buka status pengajuan existing jika tersedia<br>7. Buka halaman profil user<br>8. Login sebagai superadmin<br>9. Validasi dashboard superadmin tampil<br>10. Buka halaman administrasi read-only | Semua halaman read-only berhasil dibuka. Dashboard user, pilihan fasilitasi, profil/fallback, dashboard superadmin, dan halaman administrasi tampil tanpa mengubah data. |  |  |  |  | Tag: `@sibudaya and @readonly`. Aman untuk production karena tidak submit data. |
 
-## TC-USR-001 - Pengajuan Fasilitasi Pentas
+## Run 2 - Submit
 
-- Tag: `@user-pentas-submit`
-- Aktor: user lembaga.
-- Precondition: user dapat login dan tidak memiliki pengajuan pentas aktif yang memblokir pengajuan baru.
-- Langkah: login, buka Ajukan Fasilitasi, pilih Pentas, isi detail kegiatan, isi administrasi, unggah proposal PDF, kirim pengajuan.
-- Expected: halaman status pengajuan tampil setelah submit.
+### M3F1-P01 - Pengajuan Fasilitasi
 
-## TC-USR-002 - Pengajuan Fasilitasi Hibah
+| No | Kode TC | Modul | Fitur | Tipe | Deskripsi Singkat | Metode | Precondition | Test Steps | Expected Result | Actual Result | Status | Tester | Tanggal Test | Catatan |
+|---:|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2 | M3F1-P01 | M3 Fasilitasi | Pengajuan Fasilitasi | POSITIF | User biasa submit pengajuan fasilitasi dan superadmin dapat melihat pengajuan tersebut | E2E | Credential user biasa dan superadmin tersedia. Akun user memiliki fasilitasi yang tersedia. File proposal PDF tersedia. Environment target boleh menerima data pengajuan nyata. | 1. Jalankan command: `mvn test -Dtest=SibudayaE2eCucumberTest -Dcucumber.filter.tags="@sibudaya and @submit"`<br>2. Login sebagai user biasa<br>3. Validasi dashboard user tampil<br>4. Buka halaman pilihan fasilitasi<br>5. Pilih fasilitasi pertama yang tersedia<br>6. Isi form pengajuan dengan marker `AUTO-E2E-yyyyMMddHHmmss`<br>7. Upload `proposal-e2e-sample.pdf` jika field file tersedia<br>8. Klik Ajukan/Kirim/Submit<br>9. Validasi halaman status pengajuan tampil<br>10. Login sebagai superadmin<br>11. Cari pengajuan berdasarkan marker<br>12. Validasi pengajuan terlihat di sisi superadmin | Pengajuan fasilitasi berhasil dibuat. Halaman status pengajuan tampil. Superadmin dapat menemukan dan membuka pengajuan baru berdasarkan marker otomatis. |  |  |  |  | Tag: `@sibudaya and @submit`. Mengubah data production. Bisa skipped jika akun tidak punya fasilitasi tersedia. |
 
-- Tag: `@user-hibah-submit`
-- Aktor: user lembaga.
-- Precondition: user dapat login dan tidak memiliki pengajuan hibah aktif yang memblokir pengajuan baru.
-- Langkah: login, buka Ajukan Fasilitasi, pilih Hibah, isi detail penerima dan alamat, unggah proposal PDF, kirim pengajuan.
-- Expected: halaman status pengajuan tampil setelah submit.
+## Data & Config
 
-## TC-USR-003 - Update Nama Depan Data Kepala Lembaga
+| Key | Value / Source | Required | Notes |
+|---|---|---|---|
+| `base.url` | `src/test/resources/shared/config.properties` atau `-Dbase.url` | Yes | Target default Sibudaya |
+| `sibudaya.e2e.user.identifier` | Config/env `SIBUDAYA_E2E_USER_IDENTIFIER` | Yes | Login user biasa |
+| `sibudaya.e2e.user.password` | Config/env `SIBUDAYA_E2E_USER_PASSWORD` | Yes | Password user biasa |
+| `sibudaya.e2e.superadmin.identifier` | Config/env `SIBUDAYA_E2E_SUPERADMIN_IDENTIFIER` | Yes | Login superadmin |
+| `sibudaya.e2e.superadmin.password` | Config/env `SIBUDAYA_E2E_SUPERADMIN_PASSWORD` | Yes | Password superadmin |
+| Proposal PDF | `src/test/resources/sibudaya/e2e/proposal-e2e-sample.pdf` | For `@submit` | File upload pengajuan |
 
-- Tag: `@user-kepala-update`
-- Aktor: user lembaga.
-- Precondition: user dapat login dan profil lembaga dapat dibuka.
-- Langkah: login, buka My Profile, pilih tab Kepala Lembaga, ubah Nama Depan, simpan.
-- Expected: sistem menampilkan pesan berhasil dan data kepala lembaga tersimpan.
+## Catatan Eksekusi
+
+- Run final 2026-06-19 menghasilkan `8 Scenarios (8 passed)` dan `54 Steps (54 passed)` dengan durasi `13m50,483s`.
+- Test dengan tag `@readonly` aman untuk production karena hanya navigasi dan validasi tampilan.
+- Test dengan tag `@submit` membuat pengajuan nyata di environment target.
+- CRUD admin user, CRUD fasilitasi Hibah, dan CRUD fasilitasi Pentas dijalankan melalui UI Selenium, bukan API langsung.
+- Log CRUD mencetak data unik saat create, read, update, delete, dan verify deleted.
+- Jika akun user tidak memiliki fasilitasi tersedia, skenario submit dapat dilewati atau gagal sesuai kondisi data target.

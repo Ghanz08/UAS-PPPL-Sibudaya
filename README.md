@@ -16,6 +16,8 @@ System Under Test adalah aplikasi web Sibudaya, layanan fasilitasi lembaga buday
 
 Test suite memakai Selenium WebDriver dengan Page Object Model, Cucumber/Gherkin, dan JUnit Platform. Login admin dan user dipusatkan di helper `AuthHelper` sehingga setiap flow bisa memakai kredensial yang sama tanpa duplikasi step.
 
+CRUD admin dijalankan dari UI browser, bukan lewat API langsung. Test mengisi form, mencari data di tabel/list, membuka detail, mengubah data, menghapus data, lalu memverifikasi data sudah hilang dari UI. Log eksekusi juga mencetak data unik yang dibuat, dibaca, diubah, dan dihapus agar hasil CRUD mudah diaudit.
+
 Flow utama:
 
 - Admin CRUD Pengaturan Fasilitasi Pentas: `@admin-pentas-crud`
@@ -24,6 +26,14 @@ Flow utama:
 - User Pengajuan Pentas: `@user-pentas-submit`
 - User Pengajuan Hibah: `@user-hibah-submit`
 - User Update Data Kepala Lembaga: `@user-kepala-update`
+
+Hasil verifikasi terakhir pada 2026-06-19:
+
+```text
+8 Scenarios (8 passed)
+54 Steps (54 passed)
+Durasi: 13m50,483s
+```
 
 Dokumen test case dan bug report tersedia di:
 
@@ -244,3 +254,13 @@ AUTO-E2E-yyyyMMddHHmmss
 ```
 
 Tanggal kegiatan otomatis diset 30 hari dari tanggal eksekusi test.
+
+Data CRUD admin memakai suffix unik per eksekusi, misalnya email `admin.<timestamp><random>@gmail.com`, nomor HP unik, dan marker fasilitasi `AUTO-HIBAH-...` atau `AUTO-PENTAS-...`.
+
+## Stabilitas E2E
+
+- Session browser dibersihkan saat berganti role.
+- Login memiliki retry jika backend mengembalikan `429 Too Many Requests`.
+- Token login dicache per credential untuk mengurangi hit ke endpoint login.
+- Validasi dashboard mengecek URL dan teks dashboard, bukan URL saja.
+- Jika session user terlempar ke halaman login saat fallback status pengajuan, test login ulang sebagai user dan melanjutkan validasi.
