@@ -93,13 +93,13 @@ Project dikompilasi dengan Java 21. Test berjalan memakai Chrome normal dengan m
 
 ## Konfigurasi
 
-Konfigurasi default ada di:
+Konfigurasi default ikut repository, jadi setelah clone/pull file ini sudah tersedia dan test bisa langsung dijalankan tanpa membuat file config baru:
 
 ```text
 src/test/resources/shared/config.properties
 ```
 
-Nilai konfigurasi bisa dioverride dengan system property Maven:
+Nilai di file tersebut adalah default bersama untuk UAT. Jika perlu menjalankan target atau akun lain, override dengan system property Maven:
 
 ```bash
 mvn test -Dbase.url="https://www.sibudaya.cloud/sibudaya"
@@ -114,6 +114,12 @@ $env:SIBUDAYA_E2E_SUPERADMIN_IDENTIFIER="superadmin-login"
 $env:SIBUDAYA_E2E_SUPERADMIN_PASSWORD="password-superadmin"
 ```
 
+Atau pakai file config lain tanpa mengubah file default repository:
+
+```bash
+mvn test -Dconfig.file="C:/path/to/config.properties"
+```
+
 Key yang umum dipakai:
 
 ```text
@@ -125,7 +131,7 @@ sibudaya.e2e.superadmin.identifier
 sibudaya.e2e.superadmin.password
 ```
 
-Default akun assignment:
+Default akun assignment sudah ada di `config.properties`:
 
 ```text
 Admin/superadmin: superadmin@fasilitasi.go.id / SuperAdmin@2026!

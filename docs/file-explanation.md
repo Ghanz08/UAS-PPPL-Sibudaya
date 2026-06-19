@@ -154,7 +154,11 @@ Prioritas pembacaan config:
 
 1. System property Maven, misalnya `-Dbase.url=...`.
 2. Environment variable, dengan format uppercase dan titik diganti underscore.
-3. File `src/test/resources/shared/config.properties`.
+3. File eksternal dari `-Dconfig.file=...` atau env `CONFIG_FILE`.
+4. File default repository `src/test/resources/shared/config.properties`.
+5. Default internal untuk `base.url` dan `default.timeout.seconds`.
+
+File `config.properties` default ikut repository agar orang lain bisa clone/pull lalu menjalankan test tanpa setup config manual. Override hanya diperlukan jika ingin memakai akun atau target berbeda.
 
 Method penting:
 

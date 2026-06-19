@@ -1,25 +1,59 @@
 package shared.core;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
 import java.util.Properties;
 
 public final class ConfigLoader {
     private static final String CONFIG_PATH = "shared/config.properties";
     private static final Properties PROPERTIES = new Properties();
+    private static final Map<String, String> DEFAULTS = Map.of(
+            "base.url", "https://www.sibudaya.cloud/sibudaya",
+            "default.timeout.seconds", "10"
+    );
 
     static {
-        try (InputStream inputStream = ConfigLoader.class.getClassLoader().getResourceAsStream(CONFIG_PATH)) {
-            if (inputStream == null) {
-                throw new IllegalStateException("Config file not found: " + CONFIG_PATH);
-            }
-            PROPERTIES.load(inputStream);
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to load config file: " + CONFIG_PATH, exception);
-        }
+        loadClasspathConfigIfPresent();
+        loadExternalConfigIfPresent();
     }
 
     private ConfigLoader() {
+    }
+
+    private static void loadExternalConfigIfPresent() {
+        String configFile = System.getProperty("config.file");
+        if (configFile == null || configFile.isBlank()) {
+            configFile = System.getenv("CONFIG_FILE");
+        }
+
+        if (configFile == null || configFile.isBlank()) {
+            return;
+        }
+
+        Path path = Path.of(configFile);
+        if (!Files.isRegularFile(path)) {
+            throw new IllegalStateException("Config file not found: " + path.toAbsolutePath());
+        }
+
+        try (InputStream inputStream = new FileInputStream(path.toFile())) {
+            PROPERTIES.load(inputStream);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to load config file: " + path.toAbsolutePath(), exception);
+        }
+    }
+
+    private static void loadClasspathConfigIfPresent() {
+        try (InputStream inputStream = ConfigLoader.class.getClassLoader().getResourceAsStream(CONFIG_PATH)) {
+            if (inputStream != null) {
+                PROPERTIES.load(inputStream);
+            }
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to load config file: " + CONFIG_PATH, exception);
+        }
     }
 
     public static String get(String key) {
@@ -33,7 +67,12 @@ public final class ConfigLoader {
             return envValue;
         }
 
-        return PROPERTIES.getProperty(key);
+        String propertyValue = PROPERTIES.getProperty(key);
+        if (propertyValue != null && !propertyValue.isBlank()) {
+            return propertyValue;
+        }
+
+        return DEFAULTS.get(key);
     }
 
     public static String getOptional(String key) {
@@ -55,10 +94,20 @@ public final class ConfigLoader {
     }
 
     public static String getBaseUrl() {
-        return get("base.url");
+        return getRequired("base.url");
     }
 
     public static long getTimeoutSeconds() {
-        return Long.parseLong(PROPERTIES.getProperty("default.timeout.seconds", "10"));
+        return Long.parseLong(getRequired("default.timeout.seconds"));
+    }
+
+    private static String getRequired(String key) {
+        String value = getOptional(key);
+        if (value == null) {
+            throw new IllegalStateException("Missing required config: " + key
+                    + ". Set -D" + key + "=... or env " + key.toUpperCase().replace('.', '_') + ".");
+        }
+
+        return value;
     }
 }
